@@ -1,0 +1,41 @@
+﻿@model GlobalTemp.Models.WeatherModel
+
+@{
+    ViewData["Title"] = "Home Page";
+}
+
+<div>
+    <div class="card text-white bg-primary mb-3" style="max-width: 40rem;">
+
+        <div class="card-header text-center">
+            <h3>Gobal Temperature Finder</h3>
+            <h7>Get the Current Temperature of any City in the World</h7>
+        </div>
+
+        <div class="card-body text-center">
+            @Html.DisplayFor(m => m.ReportText)
+        </div>
+
+        <div class="card-footer text-center">
+            <div class="row">
+                <div class="col-md-8 offset-md-2">
+                    @using (Html.BeginForm("Index", "Home", FormMethod.Post))
+                    {
+
+                        <label>Enter just the name of a city </label>
+
+
+                        @Html.TextBoxFor(m => m.CityName, new { @class = "text-center" })
+
+                        <hr />
+
+                        <input type="submit" value="Submit" />
+
+                    }
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
