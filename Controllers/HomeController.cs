@@ -13,7 +13,7 @@ namespace GlobalTemp.Controllers
     {
         private readonly ILogger<HomeController> _logger;
         private Microsoft.Extensions.Configuration.IConfiguration _cfg;
-        private System.Net.Http.HttpClient client { get; set; }
+        private static HttpClient _client { get; set; }
         private UriBuilder uriBldr;
 
         public HomeController(ILogger<HomeController> logger, Microsoft.Extensions.Configuration.IConfiguration cfg)
@@ -21,7 +21,14 @@ namespace GlobalTemp.Controllers
             _logger = logger;
             _cfg = cfg;
 
-            client = new HttpClient();
+            //
+            // Bug Fix 2021-04-09
+            // Using a static _client member to avoid making another connection at every user request coming to the controlller
+            //
+            if ( _client == null )
+            {
+                _client = new HttpClient();
+            }
 
             string baseUrl = _cfg.GetValue<string>("weatherBaseUrl");
             uriBldr = new UriBuilder(baseUrl);
@@ -39,8 +46,8 @@ namespace GlobalTemp.Controllers
             string cityName = weather.CityName;
             uriBldr.Query = uriBldr.Query.Substring(1) + "&q=" + cityName;
 
-            HttpResponseMessage resp = client.GetAsync(uriBldr.Uri).Result;
-
+            HttpResponseMessage resp = _client.GetAsync(uriBldr.Uri).Result;
+            
             try
             {
                 resp.EnsureSuccessStatusCode();
