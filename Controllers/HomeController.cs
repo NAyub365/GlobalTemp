@@ -1,70 +1,102 @@
 ﻿using GlobalTemp.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
 using System;
 using System.Diagnostics;
 using System.Net.Http;
+using System.Text.RegularExpressions;
 
 namespace GlobalTemp.Controllers
 {
     public class HomeController : Controller
     {
-        private readonly ILogger<HomeController> _logger;
-        private Microsoft.Extensions.Configuration.IConfiguration _cfg;
-        private static HttpClient _client { get; set; }
-        private UriBuilder uriBldr;
+        private static string _cityNotFoundMsg;
+        private static string _cityNameInvalidMsg;
+        private static string _networkComFailedMsg;
+        private static string _baseUrl;
+        private static string _queryFixedPart;
+        private UriBuilder _uriBldr;
+        private readonly IConfiguration _cfg;
+        private static HttpClient _client;
 
-        public HomeController(ILogger<HomeController> logger, Microsoft.Extensions.Configuration.IConfiguration cfg)
+        public HomeController(IConfiguration cfg)
         {
-            _logger = logger;
             _cfg = cfg;
 
             //
             // Bug Fix 2021-04-09
             // Using a static _client member to avoid making another connection at every user request coming to the controlller
             //
-            if ( _client == null )
+            if (_client == null)
             {
                 _client = new HttpClient();
             }
-
-            string baseUrl = _cfg.GetValue<string>("weatherBaseUrl");
-            uriBldr = new UriBuilder(baseUrl);
-            uriBldr.Query = _cfg.GetValue<string>("weatherQueryFixedPart");
+            
+            LoadSettings();
         }
 
         public IActionResult Index()
         {
             return View();
         }
-
+        
         [HttpPost]
-        public IActionResult Index(WeatherModel weather)
+        public async System.Threading.Tasks.Task<IActionResult> Index(WeatherModel weatherModel)
         {
-            string cityName = weather.CityName;
-            uriBldr.Query = uriBldr.Query.Substring(1) + "&q=" + cityName;
+            string cityNameFromUser = weatherModel.CityNameFromUser;
 
-            HttpResponseMessage resp = _client.GetAsync(uriBldr.Uri).Result;
-            
+            //
+            // Check for user typos
+            //
+            if ( (string.IsNullOrWhiteSpace(cityNameFromUser)) || (Regex.IsMatch(cityNameFromUser, "^[a-zA-Z]+$") == false) )
+            {
+                weatherModel.cityTempToUser = _cityNameInvalidMsg;
+                return View(weatherModel);
+            }
+
+            _uriBldr = new UriBuilder(_baseUrl);
+            _uriBldr.Query = _queryFixedPart;
+            _uriBldr.Query += "&q=" + cityNameFromUser;
+
+
+            HttpResponseMessage resp;
             try
             {
-                resp.EnsureSuccessStatusCode();
+                //
+                // Caution - Wrong usage detected in a code review with Jason and Khaled
+                // Trying to read the final result in the same statement was causing this aync call to become SYNCHRONOUS
+                // resp = _client.GetAsync(uriBldr.Uri).Result;
+                //
+                resp = await _client.GetAsync(_uriBldr.Uri);
             }
             catch (Exception)
             {
-                weather.ReportText = "I'm sorry, no city by that name exists on the surface of this planet.";
-                return View(weather);
+                //
+                // Network issues like a broken internet connection will cause execution to reach here
+                //
+                weatherModel.cityTempToUser = _networkComFailedMsg;
+                return View(weatherModel);
             }
 
-            string dataAsJSON = resp.Content.ReadAsStringAsync().Result;
+            if (resp.IsSuccessStatusCode == false)
+            {
+                //
+                // Execution will reach here if the external API does not have this city in its database
+                //
+                weatherModel.cityTempToUser = _cityNotFoundMsg;
+                return View(weatherModel);
+            }
 
-            Models.JsonReaderUtil.Rootobject jsonReader = JsonConvert.DeserializeObject<Models.JsonReaderUtil.Rootobject>(dataAsJSON);
+            //
+            // Finally, we have some valid output for the view
+            // Renamed the JsonReaderUtil class to WeatherDataReceiver after a code review with Khaled and Jason to improve code readability
+            // The WeatherDataReceiver class is used solely to load the received raw JSON data into the members of a C# object
+            //
+            string dataAsRawJSON = resp.Content.ReadAsStringAsync().Result;
+            Models.WeatherDataReceiver.Rootobject weatherData = Newtonsoft.Json.JsonConvert.DeserializeObject<Models.WeatherDataReceiver.Rootobject>(dataAsRawJSON);
+            weatherModel.cityTempToUser = weatherData.main.temp.ToString() + " °F";
 
-            weather.ReportText = jsonReader.main.temp.ToString() + " °F";
-
-            return View(weather);
+            return View(weatherModel);
         }
 
         public IActionResult Privacy()
@@ -76,6 +108,34 @@ namespace GlobalTemp.Controllers
         public IActionResult Error()
         {
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+        }
+
+        private void LoadSettings()
+        {
+            if (string.IsNullOrEmpty(_baseUrl))
+            {
+                _baseUrl = _cfg.GetValue<string>("WeatherBaseUrl");
+            }
+
+            if (string.IsNullOrEmpty(_queryFixedPart))
+            {
+                _queryFixedPart = _cfg.GetValue<string>("WeatherQueryFixedPart");
+            }
+
+            if (string.IsNullOrEmpty(_cityNameInvalidMsg))
+            {
+                _cityNameInvalidMsg = _cfg.GetValue<string>("CityNameInvalidMsg");
+            }
+
+            if (string.IsNullOrEmpty(_cityNotFoundMsg))
+            {
+                _cityNotFoundMsg = _cfg.GetValue<string>("CityNotFoundMsg");
+            }
+
+            if (string.IsNullOrEmpty(_networkComFailedMsg))
+            {
+                _networkComFailedMsg = _cfg.GetValue<string>("NetworkCommunicationFailedMsg");
+            }
         }
     }
 }

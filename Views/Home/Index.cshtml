@@ -1,7 +1,7 @@
 ﻿@model GlobalTemp.Models.WeatherModel
 
 @{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "20210414";
 }
 
 <div>
@@ -13,7 +13,7 @@
         </div>
 
         <div class="card-body text-center">
-            @Html.DisplayFor(m => m.ReportText)
+            @Html.DisplayFor(m => m.cityTempToUser)
         </div>
 
         <div class="card-footer text-center">
@@ -25,7 +25,7 @@
                         <label>Enter just the name of a city </label>
 
 
-                        @Html.TextBoxFor(m => m.CityName, new { @class = "text-center" })
+                        @Html.TextBoxFor(m => m.CityNameFromUser, new { @class = "text-center" })
 
                         <hr />
 

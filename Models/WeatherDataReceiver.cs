@@ -1,6 +1,6 @@
 ﻿namespace GlobalTemp.Models
 {
-    public class JsonReaderUtil
+    public class WeatherDataReceiver
     {
         public class Rootobject
         {
