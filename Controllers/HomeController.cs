@@ -15,6 +15,7 @@ namespace GlobalTemp.Controllers
         private static string _networkComFailedMsg;
         private static string _baseUrl;
         private static string _queryFixedPart;
+        private static string _apiKey;
         private UriBuilder _uriBldr;
         private readonly IConfiguration _cfg;
         private static HttpClient _client;
@@ -31,7 +32,7 @@ namespace GlobalTemp.Controllers
             {
                 _client = new HttpClient();
             }
-            
+
             LoadSettings();
         }
 
@@ -39,7 +40,7 @@ namespace GlobalTemp.Controllers
         {
             return View();
         }
-        
+
         [HttpPost]
         public async System.Threading.Tasks.Task<IActionResult> Index(WeatherModel weatherModel)
         {
@@ -48,7 +49,7 @@ namespace GlobalTemp.Controllers
             //
             // Check for user typos
             //
-            if ( (string.IsNullOrWhiteSpace(cityNameFromUser)) || (Regex.IsMatch(cityNameFromUser, "^[a-zA-Z]+$") == false) )
+            if ((string.IsNullOrWhiteSpace(cityNameFromUser)) || (Regex.IsMatch(cityNameFromUser, "^[a-zA-Z]+$") == false))
             {
                 weatherModel.cityTempToUser = _cityNameInvalidMsg;
                 return View(weatherModel);
@@ -56,6 +57,7 @@ namespace GlobalTemp.Controllers
 
             _uriBldr = new UriBuilder(_baseUrl);
             _uriBldr.Query = _queryFixedPart;
+            _uriBldr.Query += "&" + _apiKey;
             _uriBldr.Query += "&q=" + cityNameFromUser;
 
 
@@ -114,27 +116,32 @@ namespace GlobalTemp.Controllers
         {
             if (string.IsNullOrEmpty(_baseUrl))
             {
-                _baseUrl = _cfg.GetValue<string>("WeatherBaseUrl");
+                _baseUrl = _cfg.GetValue<string>("GT_API_BASE_URL");
             }
 
             if (string.IsNullOrEmpty(_queryFixedPart))
             {
-                _queryFixedPart = _cfg.GetValue<string>("WeatherQueryFixedPart");
+                _queryFixedPart = _cfg.GetValue<string>("GT_API_QUERY_FIXED_PART");
+            }
+
+            if (string.IsNullOrEmpty(_apiKey))
+            {
+                _apiKey = _cfg.GetValue<string>("GT_API_KEY");
             }
 
             if (string.IsNullOrEmpty(_cityNameInvalidMsg))
             {
-                _cityNameInvalidMsg = _cfg.GetValue<string>("CityNameInvalidMsg");
+                _cityNameInvalidMsg = _cfg.GetValue<string>("GT_CITY_NAME_INVALID_MSG");
             }
 
             if (string.IsNullOrEmpty(_cityNotFoundMsg))
             {
-                _cityNotFoundMsg = _cfg.GetValue<string>("CityNotFoundMsg");
+                _cityNotFoundMsg = _cfg.GetValue<string>("GT_CITY_NOT_FOUND_MSG");
             }
 
             if (string.IsNullOrEmpty(_networkComFailedMsg))
             {
-                _networkComFailedMsg = _cfg.GetValue<string>("NetworkCommunicationFailedMsg");
+                _networkComFailedMsg = _cfg.GetValue<string>("GT_NETWORK_COMM_FAILED_MSG");
             }
         }
     }
