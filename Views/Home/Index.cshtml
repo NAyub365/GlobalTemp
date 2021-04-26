@@ -1,7 +1,7 @@
 ﻿@model GlobalTemp.Models.WeatherModel
 
 @{
-    ViewData["Title"] = "20210419B";
+    ViewData["Title"] = "20210426A";
 }
 
 <div>
@@ -12,30 +12,65 @@
             <h7>Get the Current Temperature of any City in the World</h7>
         </div>
 
-        <div class="card-body text-center">
-            @Html.DisplayFor(m => m.cityTempToUser)
-        </div>
+        <div class="card-body text-center" style="padding:5px 0px 5px 0px">
+            <div class="row align-middle">
 
-        <div class="card-footer text-center">
-            <div class="row">
-                <div class="col-md-8 offset-md-2">
-                    @using (Html.BeginForm("Index", "Home", FormMethod.Post))
+                <div class="col-md-3">
+                    @if (Model != null && !String.IsNullOrEmpty(Model.countryFlagUrl))
                     {
-
-                        <label>Enter just the name of a city </label>
-
-
-                        @Html.TextBoxFor(m => m.CityNameFromUser, new { @class = "text-center" })
-
-                        <hr />
-
-                        <input type="submit" value="Submit" />
-
+                        <img src="@Model.countryFlagUrl" alt="Image here" class="img-fluid" />
                     }
                 </div>
+
+                @{
+                    string dpyText = "";
+                    if (Model != null)
+                    {
+                        if (!String.IsNullOrEmpty(Model.CityName))
+                        {
+                            dpyText += Model.CityName;
+                        }
+                        if (!String.IsNullOrEmpty(Model.CountryName))
+                        {
+                            dpyText += ", " + Model.CountryName;
+                        }
+                    }
+                }
+
+                <div class="col-md-6 text-center">
+                    <p>@dpyText</p>
+                </div>
+
+                <div class="col-md-3 text-center">
+                    @if (Model != null && !String.IsNullOrEmpty(Model.CityTemp))
+                    {
+                        <h5>@Model.CityTemp</h5>
+                    }
+                </div>
+
             </div>
         </div>
 
-    </div>
+        <div class="card-footer text-center">
 
-</div>
+            @using (Html.BeginForm("Index", "Home", FormMethod.Post))
+            {
+                <div class="row align-middle">
+
+                    <div class="col-md-5">
+                        <label>Enter just the name of a city </label>
+                    </div>
+
+                    <div class="col-md-4">
+                        @Html.TextBoxFor(m => m.CityNameFromUser, new { @class = "text-center" })
+                    </div>
+
+                    <div class="col-md-3">
+                        <input type="submit" value="Submit" />
+                    </div>
+
+                </div>
+            }
+
+
+    </div>

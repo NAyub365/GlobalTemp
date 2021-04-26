@@ -13,10 +13,18 @@ namespace GlobalTemp.Controllers
         private static string _cityNotFoundMsg;
         private static string _cityNameInvalidMsg;
         private static string _networkComFailedMsg;
-        private static string _baseUrl;
-        private static string _queryFixedPart;
-        private static string _apiKey;
-        private UriBuilder _uriBldr;
+
+        private static string _weatherApiBaseUrl;
+        private static string _weatherQueryFixedPart;
+        private static int _weatherQueryFixedPartLen;
+        private static string _weatherApiKey;
+        private static UriBuilder _weatherUriBldr;
+
+        private static string _countryApiBaseUrl;
+        private static string _countryApiPath;
+        private static string _countryApiEndpt;
+        private static int _countryApiBaseUrlLen;
+
         private readonly IConfiguration _cfg;
         private static HttpClient _client;
 
@@ -44,6 +52,9 @@ namespace GlobalTemp.Controllers
         [HttpPost]
         public async System.Threading.Tasks.Task<IActionResult> Index(WeatherModel weatherModel)
         {
+            //
+            // Get the model data coming from view
+            //
             string cityNameFromUser = weatherModel.CityNameFromUser;
 
             //
@@ -51,15 +62,16 @@ namespace GlobalTemp.Controllers
             //
             if ((string.IsNullOrWhiteSpace(cityNameFromUser)) || (Regex.IsMatch(cityNameFromUser, "^[a-zA-Z]+$") == false))
             {
-                weatherModel.cityTempToUser = _cityNameInvalidMsg;
+                weatherModel.CityTemp = _cityNameInvalidMsg;
                 return View(weatherModel);
             }
 
-            _uriBldr = new UriBuilder(_baseUrl);
-            _uriBldr.Query = _queryFixedPart;
-            _uriBldr.Query += "&" + _apiKey;
-            _uriBldr.Query += "&q=" + cityNameFromUser;
-
+            int qParamIdx = _weatherUriBldr.Query.IndexOf("&q=");
+            if (qParamIdx > -1)
+            {
+                _weatherUriBldr.Query = _weatherUriBldr.Query.Remove(qParamIdx);
+            }
+            _weatherUriBldr.Query += "&q=" + cityNameFromUser;
 
             HttpResponseMessage resp;
             try
@@ -69,14 +81,14 @@ namespace GlobalTemp.Controllers
                 // Trying to read the final result in the same statement was causing this aync call to become SYNCHRONOUS
                 // resp = _client.GetAsync(uriBldr.Uri).Result;
                 //
-                resp = await _client.GetAsync(_uriBldr.Uri);
+                resp = await _client.GetAsync(_weatherUriBldr.Uri);
             }
             catch (Exception)
             {
                 //
                 // Network issues like a broken internet connection will cause execution to reach here
                 //
-                weatherModel.cityTempToUser = _networkComFailedMsg;
+                weatherModel.CityTemp = _networkComFailedMsg;
                 return View(weatherModel);
             }
 
@@ -85,7 +97,7 @@ namespace GlobalTemp.Controllers
                 //
                 // Execution will reach here if the external API does not have this city in its database
                 //
-                weatherModel.cityTempToUser = _cityNotFoundMsg;
+                weatherModel.CityTemp = _cityNotFoundMsg;
                 return View(weatherModel);
             }
 
@@ -95,8 +107,70 @@ namespace GlobalTemp.Controllers
             // The WeatherDataReceiver class is used solely to load the received raw JSON data into the members of a C# object
             //
             string dataAsRawJSON = resp.Content.ReadAsStringAsync().Result;
-            Models.WeatherDataReceiver.Rootobject weatherData = Newtonsoft.Json.JsonConvert.DeserializeObject<Models.WeatherDataReceiver.Rootobject>(dataAsRawJSON);
-            weatherModel.cityTempToUser = weatherData.main.temp.ToString() + " °F";
+            Models.WeatherDataReceiver.Rootobject weatherData = 
+                Newtonsoft.Json.JsonConvert.DeserializeObject<Models.WeatherDataReceiver.Rootobject>(
+                    dataAsRawJSON,
+                    new Newtonsoft.Json.JsonSerializerSettings
+                    {
+                        DefaultValueHandling = Newtonsoft.Json.DefaultValueHandling.Ignore,
+                        NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore
+                    });
+
+            //DateTime sunriseDT = DateTime.Parse(weatherData.sys.sunrise.ToString());
+            //DateTime sunsetDT  = DateTime.Parse(weatherData.sys.sunset.ToString());
+            string countryCode2LfromWeatherApi = weatherData.sys.country;
+
+            //
+            // Populate model with data bound for the view
+            //
+            weatherModel.CityName = weatherData.name;
+            weatherModel.CityTemp = weatherData.main.temp.ToString() + " °F";
+
+
+            // ------------------------------------------------------
+            //
+            //                      Call 2nd API
+            //
+            // ------------------------------------------------------
+
+            _countryApiPath = "/alpha/" + countryCode2LfromWeatherApi;
+            _countryApiEndpt = _countryApiBaseUrl + _countryApiPath;
+            try
+            {
+                resp = await _client.GetAsync(_countryApiEndpt);
+            }
+            catch (Exception)
+            {
+                //
+                // Network issues like a broken internet connection will cause execution to reach here
+                //
+                weatherModel.CityTemp = _networkComFailedMsg;
+                return View(weatherModel);
+            }
+
+            if (resp.IsSuccessStatusCode == false)
+            {
+                //
+                // Execution will reach here if the external API does not have this city in its database
+                //
+                weatherModel.CityTemp = _cityNotFoundMsg;
+                return View(weatherModel);
+            }
+
+            dataAsRawJSON = resp.Content.ReadAsStringAsync().Result;
+            Models.CountryDataReceiver.Rootobject ctryData = 
+                Newtonsoft.Json.JsonConvert.DeserializeObject<Models.CountryDataReceiver.Rootobject>(
+                    dataAsRawJSON,
+                    new Newtonsoft.Json.JsonSerializerSettings 
+                    { 
+                        DefaultValueHandling = Newtonsoft.Json.DefaultValueHandling.Ignore, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore 
+                    });
+
+            //
+            // Populate model with data bound for the view
+            //
+            weatherModel.CountryName = ctryData.name;
+            weatherModel.countryFlagUrl = ctryData.flag;
 
             return View(weatherModel);
         }
@@ -114,19 +188,23 @@ namespace GlobalTemp.Controllers
 
         private void LoadSettings()
         {
-            if (string.IsNullOrEmpty(_baseUrl))
+            if (string.IsNullOrEmpty(_weatherApiBaseUrl))
             {
-                _baseUrl = _cfg.GetValue<string>("GT_API_BASE_URL");
+                _weatherApiBaseUrl = _cfg.GetValue<string>("GT_API_BASE_URL");
             }
 
-            if (string.IsNullOrEmpty(_queryFixedPart))
+            if (string.IsNullOrEmpty(_weatherQueryFixedPart))
             {
-                _queryFixedPart = _cfg.GetValue<string>("GT_API_QUERY_FIXED_PART");
+                _weatherQueryFixedPart = _cfg.GetValue<string>("GT_API_QUERY_FIXED_PART");
             }
 
-            if (string.IsNullOrEmpty(_apiKey))
+            if (string.IsNullOrEmpty(_weatherApiKey))
             {
-                _apiKey = _cfg.GetValue<string>("GT_API_KEY");
+                _weatherApiKey = _cfg.GetValue<string>("GT_API_KEY");
+                _weatherUriBldr = new UriBuilder(_weatherApiBaseUrl);
+                _weatherUriBldr.Query = _weatherQueryFixedPart;
+                _weatherUriBldr.Query += "&" + _weatherApiKey;
+                _weatherQueryFixedPartLen = _weatherUriBldr.Query.Length;
             }
 
             if (string.IsNullOrEmpty(_cityNameInvalidMsg))
@@ -142,6 +220,12 @@ namespace GlobalTemp.Controllers
             if (string.IsNullOrEmpty(_networkComFailedMsg))
             {
                 _networkComFailedMsg = _cfg.GetValue<string>("GT_NETWORK_COMM_FAILED_MSG");
+            }
+
+            if (string.IsNullOrEmpty(_countryApiBaseUrl))
+            {
+                _countryApiBaseUrl = _cfg.GetValue<string>("GT_COUNTRY_API_BASE_URL");
+                _countryApiBaseUrlLen = _countryApiBaseUrl.Length;
             }
         }
     }
