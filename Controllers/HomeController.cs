@@ -58,11 +58,16 @@ namespace GlobalTemp.Controllers
             string cityNameFromUser = weatherModel.CityNameFromUser;
 
             //
+            // init
+            //
+            weatherModel.CityTempVal = float.NaN;
+
+            //
             // Check for user typos
             //
             if ((string.IsNullOrWhiteSpace(cityNameFromUser)) || (Regex.IsMatch(cityNameFromUser, "^[a-zA-Z]+$") == false))
             {
-                weatherModel.CityTemp = _cityNameInvalidMsg;
+                weatherModel.ErrMsgToUser = _cityNameInvalidMsg;
                 return View(weatherModel);
             }
 
@@ -88,7 +93,7 @@ namespace GlobalTemp.Controllers
                 //
                 // Network issues like a broken internet connection will cause execution to reach here
                 //
-                weatherModel.CityTemp = _networkComFailedMsg;
+                weatherModel.ErrMsgToUser = _networkComFailedMsg;
                 return View(weatherModel);
             }
 
@@ -97,7 +102,7 @@ namespace GlobalTemp.Controllers
                 //
                 // Execution will reach here if the external API does not have this city in its database
                 //
-                weatherModel.CityTemp = _cityNotFoundMsg;
+                weatherModel.ErrMsgToUser = _cityNotFoundMsg;
                 return View(weatherModel);
             }
 
@@ -124,7 +129,7 @@ namespace GlobalTemp.Controllers
             // Populate model with data bound for the view
             //
             weatherModel.CityName = weatherData.name;
-            weatherModel.CityTemp = weatherData.main.temp.ToString() + " °F";
+            weatherModel.CityTempVal = weatherData.main.temp;          // Farenheight
 
 
             // ------------------------------------------------------
@@ -144,7 +149,7 @@ namespace GlobalTemp.Controllers
                 //
                 // Network issues like a broken internet connection will cause execution to reach here
                 //
-                weatherModel.CityTemp = _networkComFailedMsg;
+                weatherModel.ErrMsgToUser = _networkComFailedMsg;
                 return View(weatherModel);
             }
 
@@ -153,7 +158,7 @@ namespace GlobalTemp.Controllers
                 //
                 // Execution will reach here if the external API does not have this city in its database
                 //
-                weatherModel.CityTemp = _cityNotFoundMsg;
+                weatherModel.ErrMsgToUser = _cityNotFoundMsg;
                 return View(weatherModel);
             }
 

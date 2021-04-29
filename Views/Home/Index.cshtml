@@ -1,76 +1,114 @@
 ﻿@model GlobalTemp.Models.WeatherModel
 
 @{
-    ViewData["Title"] = "20210426A";
+    ViewData["Title"] = "20210429A";
 }
 
 <div>
     <div class="card text-white bg-primary mb-3" style="max-width: 40rem;">
 
         <div class="card-header text-center">
-            <h3>Gobal Temperature Finder</h3>
-            <h7>Get the Current Temperature of any City in the World</h7>
+            <h4 class="title">Gobal Temperature Finder</h4>
+            <p class="title" style="font-size:small;">Get the current temperature of any city in the world</p>
         </div>
 
-        <div class="card-body text-center" style="padding:5px 0px 5px 0px">
-            <div class="row align-middle">
+        @{
+            string cityDpy = String.Empty;
+            string ctryDpy = String.Empty;
+            if (Model != null)
+            {
 
-                <div class="col-md-3">
-                    @if (Model != null && !String.IsNullOrEmpty(Model.countryFlagUrl))
-                    {
-                        <img src="@Model.countryFlagUrl" alt="Image here" class="img-fluid" />
-                    }
-                </div>
-
-                @{
-                    string dpyText = "";
-                    if (Model != null)
-                    {
-                        if (!String.IsNullOrEmpty(Model.CityName))
-                        {
-                            dpyText += Model.CityName;
-                        }
-                        if (!String.IsNullOrEmpty(Model.CountryName))
-                        {
-                            dpyText += ", " + Model.CountryName;
-                        }
-                    }
+                if (!String.IsNullOrEmpty(Model.CityName))
+                {
+                    cityDpy += Model.CityName;
+                }
+                if (!String.IsNullOrEmpty(Model.CountryName))
+                {
+                    ctryDpy += Model.CountryName;
                 }
 
-                <div class="col-md-6 text-center">
-                    <p>@dpyText</p>
+                string ctryFlagUrl = String.Empty;
+                if (String.IsNullOrEmpty(Model.countryFlagUrl) == false)
+                {
+                    ctryFlagUrl = @Model.countryFlagUrl;
+                }
+
+                string cityTempDpyF = String.Empty;
+                string cityTempDpyC = String.Empty;
+                if (float.IsNaN(Model.CityTempVal) == false)
+                {
+                    double cityTempValF = @Model.CityTempVal;
+                    cityTempDpyF = cityTempValF.ToString("0.#") + " °F";
+                    double cityTempValC = 5.0 * (cityTempValF - 32.0) / 9.0;
+                    cityTempDpyC = cityTempValC.ToString("0.#") + " °C";
+                }
+
+                string errMsgToUser = Model.ErrMsgToUser;
+                bool errFlag = !string.IsNullOrEmpty(errMsgToUser);
+
+
+                <div class="card-body text-center" style="padding:0px 0px 0px 0px">
+
+                    <table class="table table-bordered">
+                                <tbody>
+                                    @if (errFlag == false)
+                                    {
+                                        <tr>
+                                            <td class="title">City</td>
+                                            <td class="data align-middle" colspan="2">@cityDpy</td>
+                                        </tr>
+
+                                    <tr>
+                                        <td class="title">Country</td>
+                                        <td class="data">@ctryDpy</td>
+                                        @if (string.IsNullOrEmpty(ctryFlagUrl) == false)
+                                        {
+                                            <td><img src="@ctryFlagUrl" alt="Image here" /></td>
+                                        }
+                                    </tr>
+
+                                    <tr>
+                                        <td class="title">Temperature</td>
+                                        <td class="data"><h4>@cityTempDpyC</h4></td>
+                                        <td class="data"><h4>@cityTempDpyF</h4></td>
+                                    </tr>
+                                    }
+
+                                    @if (errFlag)
+                                    {
+                                        <tr>
+                                            <td class="title">Message</td>
+                                            <td class="data" colspan="2">@errMsgToUser</td>
+                                        </tr>
+
+                                    }
+
+                                </tbody>
+                    </table>
+
                 </div>
 
-                <div class="col-md-3 text-center">
-                    @if (Model != null && !String.IsNullOrEmpty(Model.CityTemp))
-                    {
-                        <h5>@Model.CityTemp</h5>
-                    }
-                </div>
 
-            </div>
-        </div>
 
-        <div class="card-footer text-center">
 
-            @using (Html.BeginForm("Index", "Home", FormMethod.Post))
-            {
-                <div class="row align-middle">
 
-                    <div class="col-md-5">
-                        <label>Enter just the name of a city </label>
-                    </div>
 
-                    <div class="col-md-4">
-                        @Html.TextBoxFor(m => m.CityNameFromUser, new { @class = "text-center" })
-                    </div>
 
-                    <div class="col-md-3">
-                        <input type="submit" value="Submit" />
-                    </div>
-
-                </div>
             }
+        }
 
+        @using (Html.BeginForm("Index", "Home", FormMethod.Post))
+        {
+            <table class="table" style="margin: 0px;">
+                <tbody>
+                    <tr>
+                        <td><label class="title">Just the name of a city</label></td>
+                        <td>@Html.TextBoxFor(m => m.CityNameFromUser, new { @class = "text-center" })</td>
+                        <td><input type="submit" value="Submit" /></td>
+                    </tr>
+                </tbody>
+            </table>
+        }
 
     </div>
+</div>
