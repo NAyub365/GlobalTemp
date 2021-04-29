@@ -91,6 +91,7 @@ img {
 .table > tbody > tr > td {
     vertical-align: middle;
     border-color:grey;
+    text-align:center;
 }
 
 .title {
