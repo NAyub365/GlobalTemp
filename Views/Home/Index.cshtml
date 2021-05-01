@@ -1,15 +1,15 @@
 ﻿@model GlobalTemp.Models.WeatherModel
 
 @{
-    ViewData["Title"] = "20210429A";
+    ViewData["title2"] = "";
 }
 
 <div>
     <div class="card text-white bg-primary mb-3" style="max-width: 40rem;">
 
         <div class="card-header text-center">
-            <h4 class="title">Gobal Temperature Finder</h4>
-            <p class="title" style="font-size:small;">Get the current temperature of any city in the world</p>
+            <h4 class="title1">Gobal Temperature Finder</h4>
+            <p class="title2">Get the current temperature of any city in the world (v1.0)</p>
         </div>
 
         @{
@@ -53,9 +53,16 @@
                 string sunsetDpy = String.Empty;
                 if (Model.SunsetDT != null)
                 {
-                    // 4/13/2021 2:29:21 AM
                     sunsetDpy = Model.SunsetDT.ToString();
                     sunsetDpy = sunsetDpy.Substring(sunsetDpy.IndexOf('\u0020') + 1);
+                }
+                string curDateDpy = String.Empty;
+                string curTimeDpy = String.Empty;
+                if (Model.nowDT != null)
+                {
+                    string tempStr = Model.nowDT.ToString("yyyy-MM-dd hh:mm tt");
+                    curDateDpy = tempStr.Substring(0, tempStr.IndexOf('\u0020') );
+                    curTimeDpy = tempStr.Substring(tempStr.IndexOf('\u0020') + 1);
                 }
 
                 string errMsgToUser = Model.ErrMsgToUser;
@@ -69,12 +76,12 @@
                                     @if (errFlag == false)
                                     {
                                         <tr>
-                                            <td class="title">City</td>
+                                            <td class="title2">City</td>
                                             <td class="data align-middle" colspan="2">@cityDpy</td>
                                         </tr>
 
                                         <tr>
-                                            <td class="title">Country</td>
+                                            <td class="title2">Country</td>
                                             <td class="data">@ctryDpy</td>
                                             @if (string.IsNullOrEmpty(ctryFlagUrl) == false)
                                             {
@@ -83,13 +90,20 @@
                                         </tr>
 
                                         <tr>
-                                            <td class="title">Temperature</td>
+                                            <td class="title2">Now</td>
+                                            <td class="data"><h6>@curDateDpy</h6></td>
+                                            <td class="data"><h6>@curTimeDpy</h6></td>
+                                        </tr>
+
+                                        <tr>
+                                            <td class="title2">Temperature</td>
                                             <td class="data"><h4>@cityTempDpyC</h4></td>
                                             <td class="data"><h4>@cityTempDpyF</h4></td>
                                         </tr>
 
+
                                         <tr>
-                                            <td class="title">Sunrise/Sunset</td>
+                                            <td class="title2">Sunrise/Sunset</td>
                                             <td class="data"><h6>@sunriseDpy</h6></td>
                                             <td class="data"><h6>@sunsetDpy</h6></td>
                                         </tr>
@@ -99,7 +113,7 @@
                                     @if (errFlag)
                                     {
                                         <tr>
-                                            <td class="title">Message</td>
+                                            <td class="title2">Message</td>
                                             <td class="data" colspan="2">@errMsgToUser</td>
                                         </tr>
 
@@ -124,7 +138,7 @@
             <table class="table" style="margin: 0px;">
                 <tbody>
                     <tr>
-                        <td colspan="2"><label class="title">Enter just the name of a city</label></td>
+                        <td colspan="2"><label class="title2">Enter just the name of a city</label></td>
                     </tr>
                     <tr>
                         <td>@Html.TextBoxFor(m => m.CityNameFromUser, new { @class = "text-center" })</td>

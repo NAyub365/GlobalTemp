@@ -78,6 +78,12 @@ namespace GlobalTemp.Controllers
             }
             _weatherUriBldr.Query += "&q=" + cityNameFromUser;
 
+            // ------------------------------------------------------
+            //
+            //                      Call 1st API
+            //
+            // ------------------------------------------------------
+
             HttpResponseMessage resp;
             try
             {
@@ -148,6 +154,12 @@ namespace GlobalTemp.Controllers
             localSecCountSinceEpoch = secCountSinceEpoch + timezoneOffsetInSec;
             dtOffset = DateTimeOffset.FromUnixTimeSeconds(localSecCountSinceEpoch);
             weatherModel.SunsetDT = dtOffset.DateTime;
+            //
+            secCountSinceEpoch = weatherData.dt;
+            localSecCountSinceEpoch = secCountSinceEpoch + timezoneOffsetInSec;
+            dtOffset = DateTimeOffset.FromUnixTimeSeconds(localSecCountSinceEpoch);
+            weatherModel.nowDT = dtOffset.DateTime;
+
 
             // ------------------------------------------------------
             //

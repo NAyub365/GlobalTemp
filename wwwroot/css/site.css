@@ -94,8 +94,13 @@ img {
     text-align:center;
 }
 
-.title {
+.title1 {
     color: lightgrey;
+    font-size: large;
+}
+.title2 {
+    color: lightgrey;
+    font-size: smaller;
 }
 .data {
     color: lawngreen;
