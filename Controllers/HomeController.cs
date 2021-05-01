@@ -121,16 +121,33 @@ namespace GlobalTemp.Controllers
                         NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore
                     });
 
-            //DateTime sunriseDT = DateTime.Parse(weatherData.sys.sunrise.ToString());
+
+
             //DateTime sunsetDT  = DateTime.Parse(weatherData.sys.sunset.ToString());
             string countryCode2LfromWeatherApi = weatherData.sys.country;
 
             //
             // Populate model with data bound for the view
             //
+
             weatherModel.CityName = weatherData.name;
             weatherModel.CityTempVal = weatherData.main.temp;          // Farenheight
 
+            //
+            //
+            //
+            int timezoneOffsetInSec = weatherData.timezone;            // Can be + or -
+            //
+            // Introducing redundant vars for the sake of readability
+            int secCountSinceEpoch = weatherData.sys.sunrise;
+            int localSecCountSinceEpoch = secCountSinceEpoch + timezoneOffsetInSec;
+            DateTimeOffset dtOffset = DateTimeOffset.FromUnixTimeSeconds(localSecCountSinceEpoch);
+            weatherModel.SunriseDT = dtOffset.DateTime;
+            //
+            secCountSinceEpoch = weatherData.sys.sunset;
+            localSecCountSinceEpoch = secCountSinceEpoch + timezoneOffsetInSec;
+            dtOffset = DateTimeOffset.FromUnixTimeSeconds(localSecCountSinceEpoch);
+            weatherModel.SunsetDT = dtOffset.DateTime;
 
             // ------------------------------------------------------
             //

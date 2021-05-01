@@ -43,6 +43,21 @@
                     cityTempDpyC = cityTempValC.ToString("0.#") + " °C";
                 }
 
+                string sunriseDpy = String.Empty;
+                if(Model.SunriseDT != null)
+                {
+                    // 4/13/2021 2:29:21 AM
+                    sunriseDpy = Model.SunriseDT.ToString();
+                    sunriseDpy = sunriseDpy.Substring(sunriseDpy.IndexOf('\u0020') + 1);
+                }
+                string sunsetDpy = String.Empty;
+                if (Model.SunsetDT != null)
+                {
+                    // 4/13/2021 2:29:21 AM
+                    sunsetDpy = Model.SunsetDT.ToString();
+                    sunsetDpy = sunsetDpy.Substring(sunsetDpy.IndexOf('\u0020') + 1);
+                }
+
                 string errMsgToUser = Model.ErrMsgToUser;
                 bool errFlag = !string.IsNullOrEmpty(errMsgToUser);
 
@@ -58,20 +73,27 @@
                                             <td class="data align-middle" colspan="2">@cityDpy</td>
                                         </tr>
 
-                                    <tr>
-                                        <td class="title">Country</td>
-                                        <td class="data">@ctryDpy</td>
-                                        @if (string.IsNullOrEmpty(ctryFlagUrl) == false)
-                                        {
-                                            <td><img src="@ctryFlagUrl" alt="Image here" /></td>
-                                        }
-                                    </tr>
+                                        <tr>
+                                            <td class="title">Country</td>
+                                            <td class="data">@ctryDpy</td>
+                                            @if (string.IsNullOrEmpty(ctryFlagUrl) == false)
+                                            {
+                                                <td><img src="@ctryFlagUrl" alt="Image here" /></td>
+                                            }
+                                        </tr>
 
-                                    <tr>
-                                        <td class="title">Temperature</td>
-                                        <td class="data"><h4>@cityTempDpyC</h4></td>
-                                        <td class="data"><h4>@cityTempDpyF</h4></td>
-                                    </tr>
+                                        <tr>
+                                            <td class="title">Temperature</td>
+                                            <td class="data"><h4>@cityTempDpyC</h4></td>
+                                            <td class="data"><h4>@cityTempDpyF</h4></td>
+                                        </tr>
+
+                                        <tr>
+                                            <td class="title">Sunrise/Sunset</td>
+                                            <td class="data"><h6>@sunriseDpy</h6></td>
+                                            <td class="data"><h6>@sunsetDpy</h6></td>
+                                        </tr>
+
                                     }
 
                                     @if (errFlag)
