@@ -81,6 +81,7 @@ namespace GlobalTemp.Controllers
             // ------------------------------------------------------
             //
             //                      Call 1st API
+            //  Cuurent time value from this API is not reliable
             //
             // ------------------------------------------------------
 
@@ -128,8 +129,6 @@ namespace GlobalTemp.Controllers
                     });
 
 
-
-            //DateTime sunsetDT  = DateTime.Parse(weatherData.sys.sunset.ToString());
             string countryCode2LfromWeatherApi = weatherData.sys.country;
 
             //
@@ -140,26 +139,34 @@ namespace GlobalTemp.Controllers
             weatherModel.CityTempVal = weatherData.main.temp;          // Farenheight
 
             //
+            // utcSecCountSinceEpoch represents UCT
+            // timezoneOffsetInSec can be + or -
             //
-            //
-            int timezoneOffsetInSec = weatherData.timezone;            // Can be + or -
+            int timezoneOffsetInSec = weatherData.timezone;
             //
             // Introducing redundant vars for the sake of readability
-            int secCountSinceEpoch = weatherData.sys.sunrise;
-            int localSecCountSinceEpoch = secCountSinceEpoch + timezoneOffsetInSec;
+            // 1,619,782,768
+
+            long utcSecCountSinceEpoch = weatherData.sys.sunrise;
+            long localSecCountSinceEpoch = utcSecCountSinceEpoch + timezoneOffsetInSec;
             DateTimeOffset dtOffset = DateTimeOffset.FromUnixTimeSeconds(localSecCountSinceEpoch);
             weatherModel.SunriseDT = dtOffset.DateTime;
             //
-            secCountSinceEpoch = weatherData.sys.sunset;
-            localSecCountSinceEpoch = secCountSinceEpoch + timezoneOffsetInSec;
+            // 1619830655
+            utcSecCountSinceEpoch = weatherData.sys.sunset;
+            localSecCountSinceEpoch = utcSecCountSinceEpoch + timezoneOffsetInSec;
             dtOffset = DateTimeOffset.FromUnixTimeSeconds(localSecCountSinceEpoch);
             weatherModel.SunsetDT = dtOffset.DateTime;
             //
-            secCountSinceEpoch = weatherData.dt;
-            localSecCountSinceEpoch = secCountSinceEpoch + timezoneOffsetInSec;
-            dtOffset = DateTimeOffset.FromUnixTimeSeconds(localSecCountSinceEpoch);
-            weatherModel.nowDT = dtOffset.DateTime;
-
+            // Compute current time in user's timezone
+            // Cuurent time value from weather API is not reliable
+            // 1619809545
+            //
+            DateTimeOffset utcNow = DateTimeOffset.UtcNow;
+            utcSecCountSinceEpoch = utcNow.ToUnixTimeSeconds();
+            localSecCountSinceEpoch = utcSecCountSinceEpoch + Convert.ToInt64(timezoneOffsetInSec);
+            DateTimeOffset localNow = DateTimeOffset.FromUnixTimeSeconds(localSecCountSinceEpoch);
+            weatherModel.nowDT = localNow.DateTime;
 
             // ------------------------------------------------------
             //
