@@ -10,9 +10,10 @@ namespace GlobalTemp.Controllers
 {
     public class HomeController : Controller
     {
-        private static string _cityNotFoundMsg;
         private static string _cityNameInvalidMsg;
         private static string _networkComFailedMsg;
+        private static string _cityNotFoundByWeatherApiMsg;
+        private static string _cityNotFoundByCountryApiMsg;
 
         private static string _weatherApiBaseUrl;
         private static string _weatherQueryFixedPart;
@@ -65,7 +66,7 @@ namespace GlobalTemp.Controllers
             //
             // Check for user typos
             //
-            if ((string.IsNullOrWhiteSpace(cityNameFromUser)) || (Regex.IsMatch(cityNameFromUser, "^[a-zA-Z]+$") == false))
+            if ((string.IsNullOrWhiteSpace(cityNameFromUser)) || (Regex.IsMatch(cityNameFromUser, "^[a-zA-Z ]+$") == false))
             {
                 weatherModel.ErrMsgToUser = _cityNameInvalidMsg;
                 return View(weatherModel);
@@ -109,7 +110,7 @@ namespace GlobalTemp.Controllers
                 //
                 // Execution will reach here if the external API does not have this city in its database
                 //
-                weatherModel.ErrMsgToUser = _cityNotFoundMsg;
+                weatherModel.ErrMsgToUser = _cityNotFoundByWeatherApiMsg;
                 return View(weatherModel);
             }
 
@@ -139,23 +140,23 @@ namespace GlobalTemp.Controllers
             weatherModel.CityTempVal = weatherData.main.temp;          // Farenheight
 
             //
-            // utcSecCountSinceEpoch represents UCT
+            // utcSecSinceEpoch represents UCT
             // timezoneOffsetInSec can be + or -
-            //
-            int timezoneOffsetInSec = weatherData.timezone;
+            // Convert.ToInt64
+            long timezoneOffsetInSec = weatherData.timezone;
             //
             // Introducing redundant vars for the sake of readability
             // 1,619,782,768
-
-            long utcSecCountSinceEpoch = weatherData.sys.sunrise;
-            long localSecCountSinceEpoch = utcSecCountSinceEpoch + timezoneOffsetInSec;
-            DateTimeOffset dtOffset = DateTimeOffset.FromUnixTimeSeconds(localSecCountSinceEpoch);
+            //
+            long utcSecSinceEpoch = weatherData.sys.sunrise;
+            long localSecSinceEpoch = utcSecSinceEpoch + timezoneOffsetInSec;
+            DateTimeOffset dtOffset = DateTimeOffset.FromUnixTimeSeconds(localSecSinceEpoch);
             weatherModel.SunriseDT = dtOffset.DateTime;
             //
             // 1619830655
-            utcSecCountSinceEpoch = weatherData.sys.sunset;
-            localSecCountSinceEpoch = utcSecCountSinceEpoch + timezoneOffsetInSec;
-            dtOffset = DateTimeOffset.FromUnixTimeSeconds(localSecCountSinceEpoch);
+            utcSecSinceEpoch = weatherData.sys.sunset;
+            localSecSinceEpoch = utcSecSinceEpoch + timezoneOffsetInSec;
+            dtOffset = DateTimeOffset.FromUnixTimeSeconds(localSecSinceEpoch);
             weatherModel.SunsetDT = dtOffset.DateTime;
             //
             // Compute current time in user's timezone
@@ -163,9 +164,9 @@ namespace GlobalTemp.Controllers
             // 1619809545
             //
             DateTimeOffset utcNow = DateTimeOffset.UtcNow;
-            utcSecCountSinceEpoch = utcNow.ToUnixTimeSeconds();
-            localSecCountSinceEpoch = utcSecCountSinceEpoch + Convert.ToInt64(timezoneOffsetInSec);
-            DateTimeOffset localNow = DateTimeOffset.FromUnixTimeSeconds(localSecCountSinceEpoch);
+            utcSecSinceEpoch = utcNow.ToUnixTimeSeconds();
+            localSecSinceEpoch = utcSecSinceEpoch + timezoneOffsetInSec;
+            DateTimeOffset localNow = DateTimeOffset.FromUnixTimeSeconds(localSecSinceEpoch);
             weatherModel.nowDT = localNow.DateTime;
 
             // ------------------------------------------------------
@@ -194,7 +195,7 @@ namespace GlobalTemp.Controllers
                 //
                 // Execution will reach here if the external API does not have this city in its database
                 //
-                weatherModel.ErrMsgToUser = _cityNotFoundMsg;
+                weatherModel.ErrMsgToUser = _cityNotFoundByCountryApiMsg;
                 return View(weatherModel);
             }
 
@@ -253,9 +254,14 @@ namespace GlobalTemp.Controllers
                 _cityNameInvalidMsg = _cfg.GetValue<string>("GT_CITY_NAME_INVALID_MSG");
             }
 
-            if (string.IsNullOrEmpty(_cityNotFoundMsg))
+            if (string.IsNullOrEmpty(_cityNotFoundByWeatherApiMsg))
             {
-                _cityNotFoundMsg = _cfg.GetValue<string>("GT_CITY_NOT_FOUND_MSG");
+                _cityNotFoundByWeatherApiMsg = _cfg.GetValue<string>("GT_CITY_NOT_FOUND_BY_WEATHER_API_MSG");
+            }
+
+            if (string.IsNullOrEmpty(_cityNotFoundByCountryApiMsg))
+            {
+                _cityNotFoundByCountryApiMsg = _cfg.GetValue<string>("GT_CITY_NOT_FOUND_BY_COUNTRY_API_MSG");
             }
 
             if (string.IsNullOrEmpty(_networkComFailedMsg))
