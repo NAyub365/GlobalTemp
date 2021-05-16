@@ -9,7 +9,7 @@
 
         <div class="card-header text-center">
             <h4 class="title1">Gobal Temperature Finder</h4>
-            <p class="title2">Get the current temperature of any city in the world v3</p>
+            <p class="title2">Get the current temperature of any city in the world v4</p>
         </div>
 
         @{
@@ -39,13 +39,14 @@
                 if (float.IsNaN(Model.CityTempVal) == false)
                 {
                     double cityTempValF = @Model.CityTempVal;
+                    // " °F"
                     cityTempDpyF = cityTempValF.ToString("0.#") + " °F";
                     double cityTempValC = 5.0 * (cityTempValF - 32.0) / 9.0;
                     cityTempDpyC = cityTempValC.ToString("0.#") + " °C";
                 }
 
                 string sunriseDpy = String.Empty;
-                if(Model.SunriseDT != null)
+                if (Model.SunriseDT != null)
                 {
                     // 4/13/2021 2:29:21 AM
                     sunriseDpy = Model.SunriseDT.ToString();
@@ -62,8 +63,34 @@
                 if (Model.nowDT != null)
                 {
                     string tempStr = Model.nowDT.ToString("yyyy-MM-dd hh:mm tt");
-                    curDateDpy = tempStr.Substring(0, tempStr.IndexOf('\u0020') );
+                    curDateDpy = tempStr.Substring(0, tempStr.IndexOf('\u0020'));
                     curTimeDpy = tempStr.Substring(tempStr.IndexOf('\u0020') + 1);
+                }
+
+                string currencyCode = String.Empty;
+                string currencyConv = String.Empty;
+                string currencySymbol = String.Empty;
+                string currencyName = String.Empty;
+                if (String.IsNullOrEmpty(Model.CurrencyCode) == false)
+                {
+                    currencyCode = Model.CurrencyCode;
+
+
+                    if (String.IsNullOrEmpty(Model.CurrencySymbol) == false)
+                    {
+                        currencySymbol = Model.CurrencySymbol;
+                    }
+
+                    if (float.IsNaN(Model.TargetCurrencyVal) == false)
+                    {
+                        currencyConv = "US $1 = " + currencySymbol + " " + Model.TargetCurrencyVal.ToString("0.00");
+                    }
+
+                    if (String.IsNullOrEmpty(Model.CurrencyName) == false)
+                    {
+                        currencyName = Model.CurrencyName.Split(' ').Last();
+                        currencyName = currencyName.Substring(0, 1).ToUpper() + currencyName.Substring(1);
+                    }
                 }
 
                 string errMsgToUser = Model.ErrMsgToUser;
@@ -104,11 +131,16 @@
 
 
                                         <tr>
-                                            <td class="title2">Sun rise/set</td>
+                                            <td class="title2">Sun Rise/Set</td>
                                             <td class="data"><h6>@sunriseDpy</h6></td>
                                             <td class="data"><h6>@sunsetDpy</h6></td>
                                         </tr>
 
+                                        <tr>
+                                            <td class="title2">Currency</td>
+                                            <td class="data"><h6>@currencySymbol (@currencyName)</h6></td>
+                                            <td class="data"><h6>@currencyConv</h6></td>
+                                        </tr>
                                     }
 
                                     @if (errFlag)

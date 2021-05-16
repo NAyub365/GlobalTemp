@@ -4,6 +4,7 @@ using Microsoft.Extensions.Configuration;
 using System;
 using System.Diagnostics;
 using System.Net.Http;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 
 namespace GlobalTemp.Controllers
@@ -25,6 +26,11 @@ namespace GlobalTemp.Controllers
         private static string _countryApiPath;
         private static string _countryApiEndpt;
         private static int _countryApiBaseUrlLen;
+
+        private static string _currencyApiBaseUrl;
+        private static string _currencyApiKey;
+        private static string _currencyApiParams;
+        private static string _currencyApiEndpt;
 
         private readonly IConfiguration _cfg;
         private static HttpClient _client;
@@ -193,7 +199,7 @@ namespace GlobalTemp.Controllers
             if (resp.IsSuccessStatusCode == false)
             {
                 //
-                // Execution will reach here if the external API does not have this city in its database
+                // FIX_HERE: Provide better err msg here. City not found is not appropriate here
                 //
                 weatherModel.ErrMsgToUser = _cityNotFoundByCountryApiMsg;
                 return View(weatherModel);
@@ -213,7 +219,62 @@ namespace GlobalTemp.Controllers
             //
             weatherModel.CountryName = ctryData.name;
             weatherModel.countryFlagUrl = ctryData.flag;
+            weatherModel.CurrencyCode = ctryData.currencies[0].code;
+            weatherModel.CurrencySymbol = ctryData.currencies[0].symbol;
+            weatherModel.CurrencyName = ctryData.currencies[0].name;
 
+            // ------------------------------------------------------
+            //
+            //                      Call 3rd API
+            //
+            // ------------------------------------------------------
+
+            int paramIdx = _currencyApiEndpt.IndexOf("&to=");
+            if (paramIdx > -1 && _currencyApiEndpt.Length > paramIdx+4)
+            {
+                _currencyApiEndpt = _currencyApiEndpt.Remove(paramIdx+4);
+            }
+            _currencyApiEndpt += weatherModel.CurrencyCode;
+
+            try
+            {
+                resp = await _client.GetAsync(_currencyApiEndpt);
+            }
+            catch (Exception)
+            {
+                //
+                // Network issues like a broken internet connection will cause execution to reach here
+                //
+                weatherModel.ErrMsgToUser = _networkComFailedMsg;
+                return View(weatherModel);
+            }
+
+            if (resp.IsSuccessStatusCode == false)
+            {
+                //
+                // FIX_HERE: Provide better err msg here. City not found is not appropriate here
+                //
+                weatherModel.ErrMsgToUser = _cityNotFoundByWeatherApiMsg;
+                return View(weatherModel);
+            }
+
+            //
+            // I'm having to write my own deserialization here 
+            // Can't use NewtonSoft since 1 of the keys is dynamic. The key name will change from call to call
+            //
+            dataAsRawJSON = resp.Content.ReadAsStringAsync().Result;
+            var currencyJsonDoc = JsonDocument.Parse(dataAsRawJSON);
+            float targetCurrencyVal = (float)currencyJsonDoc.RootElement.GetProperty("result").GetProperty(weatherModel.CurrencyCode).GetDouble();
+
+            //
+            // Populate model with data bound for the view
+            // TargetCurrencyVal is with respect to US$
+            //
+            weatherModel.TargetCurrencyVal = targetCurrencyVal;
+
+            //
+            //
+            //
             return View(weatherModel);
         }
 
@@ -273,6 +334,14 @@ namespace GlobalTemp.Controllers
             {
                 _countryApiBaseUrl = _cfg.GetValue<string>("GT_COUNTRY_API_BASE_URL");
                 _countryApiBaseUrlLen = _countryApiBaseUrl.Length;
+            }
+            
+            if (string.IsNullOrEmpty(_currencyApiBaseUrl))
+            {
+                _currencyApiBaseUrl = _cfg.GetValue<string>("GT_CURRENCY_API_BASE_URL");
+                _currencyApiKey = _cfg.GetValue<string>("GT_CURRENCY_API_KEY");
+                _currencyApiParams = "?" + _currencyApiKey + "&from=USD&to=";
+                _currencyApiEndpt = _currencyApiBaseUrl + _currencyApiParams;
             }
         }
     }

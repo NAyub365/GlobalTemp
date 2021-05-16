@@ -13,6 +13,11 @@ namespace GlobalTemp.Models
         public string countryFlagUrl { get; set; }
         public string CityName { get; set; }
         public string CountryName { get; set; }
+        public string CurrencyCode { get; set; }
+        public string CurrencySymbol { get; set; }
+        public string CurrencyName { get; set; }
+        public float TargetCurrencyVal { get; set; }
+
         public string ErrMsgToUser { get; set; }
     }
 }
