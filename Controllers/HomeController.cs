@@ -57,25 +57,25 @@ namespace GlobalTemp.Controllers
         }
 
         [HttpPost]
-        public async System.Threading.Tasks.Task<IActionResult> Index(WeatherModel weatherModel)
+        public async System.Threading.Tasks.Task<IActionResult> Index(CityModel cityModel)
         {
             //
             // Get the model data coming from view
             //
-            string cityNameFromUser = weatherModel.CityNameFromUser;
+            string cityNameFromUser = cityModel.CityNameFromUser;
 
             //
             // init
             //
-            weatherModel.CityTempVal = float.NaN;
+            cityModel.TemperatureVal = float.NaN;
 
             //
             // Check for user typos
             //
             if ((string.IsNullOrWhiteSpace(cityNameFromUser)) || (Regex.IsMatch(cityNameFromUser, "^[a-zA-Z ]+$") == false))
             {
-                weatherModel.ErrMsgToUser = _cityNameInvalidMsg;
-                return View(weatherModel);
+                cityModel.ErrMsgToUser = _cityNameInvalidMsg;
+                return View(cityModel);
             }
 
             int qParamIdx = _weatherUriBldr.Query.IndexOf("&q=");
@@ -107,8 +107,8 @@ namespace GlobalTemp.Controllers
                 //
                 // Network issues like a broken internet connection will cause execution to reach here
                 //
-                weatherModel.ErrMsgToUser = _networkComFailedMsg;
-                return View(weatherModel);
+                cityModel.ErrMsgToUser = _networkComFailedMsg;
+                return View(cityModel);
             }
 
             if (resp.IsSuccessStatusCode == false)
@@ -116,8 +116,8 @@ namespace GlobalTemp.Controllers
                 //
                 // Execution will reach here if the external API does not have this city in its database
                 //
-                weatherModel.ErrMsgToUser = _cityNotFoundByWeatherApiMsg;
-                return View(weatherModel);
+                cityModel.ErrMsgToUser = _cityNotFoundByWeatherApiMsg;
+                return View(cityModel);
             }
 
             //
@@ -142,8 +142,8 @@ namespace GlobalTemp.Controllers
             // Populate model with data bound for the view
             //
 
-            weatherModel.CityName = weatherData.name;
-            weatherModel.CityTempVal = weatherData.main.temp;          // Farenheight
+            cityModel.CityName = weatherData.name;
+            cityModel.TemperatureVal = weatherData.main.temp;          // Farenheight
 
             //
             // utcSecSinceEpoch represents UCT
@@ -157,23 +157,23 @@ namespace GlobalTemp.Controllers
             long utcSecSinceEpoch = weatherData.sys.sunrise;
             long localSecSinceEpoch = utcSecSinceEpoch + timezoneOffsetInSec;
             DateTimeOffset dtOffset = DateTimeOffset.FromUnixTimeSeconds(localSecSinceEpoch);
-            weatherModel.SunriseDT = dtOffset.DateTime;
+            cityModel.SunriseDT = dtOffset.DateTime;
             //
             // 1619830655
             utcSecSinceEpoch = weatherData.sys.sunset;
             localSecSinceEpoch = utcSecSinceEpoch + timezoneOffsetInSec;
             dtOffset = DateTimeOffset.FromUnixTimeSeconds(localSecSinceEpoch);
-            weatherModel.SunsetDT = dtOffset.DateTime;
+            cityModel.SunsetDT = dtOffset.DateTime;
             //
             // Compute current time in user's timezone
-            // Cuurent time value from weather API is not reliable
+            // Current time value from weather API is not reliable, it lags
             // 1619809545
             //
             DateTimeOffset utcNow = DateTimeOffset.UtcNow;
             utcSecSinceEpoch = utcNow.ToUnixTimeSeconds();
             localSecSinceEpoch = utcSecSinceEpoch + timezoneOffsetInSec;
             DateTimeOffset localNow = DateTimeOffset.FromUnixTimeSeconds(localSecSinceEpoch);
-            weatherModel.nowDT = localNow.DateTime;
+            cityModel.DateTimeNow = localNow.DateTime;
 
             // ------------------------------------------------------
             //
@@ -192,8 +192,8 @@ namespace GlobalTemp.Controllers
                 //
                 // Network issues like a broken internet connection will cause execution to reach here
                 //
-                weatherModel.ErrMsgToUser = _networkComFailedMsg;
-                return View(weatherModel);
+                cityModel.ErrMsgToUser = _networkComFailedMsg;
+                return View(cityModel);
             }
 
             if (resp.IsSuccessStatusCode == false)
@@ -201,8 +201,8 @@ namespace GlobalTemp.Controllers
                 //
                 // FIX_HERE: Provide better err msg here. City not found is not appropriate here
                 //
-                weatherModel.ErrMsgToUser = _cityNotFoundByCountryApiMsg;
-                return View(weatherModel);
+                cityModel.ErrMsgToUser = _cityNotFoundByCountryApiMsg;
+                return View(cityModel);
             }
 
             dataAsRawJSON = resp.Content.ReadAsStringAsync().Result;
@@ -217,11 +217,11 @@ namespace GlobalTemp.Controllers
             //
             // Populate model with data bound for the view
             //
-            weatherModel.CountryName = ctryData.name;
-            weatherModel.countryFlagUrl = ctryData.flag;
-            weatherModel.CurrencyCode = ctryData.currencies[0].code;
-            weatherModel.CurrencySymbol = ctryData.currencies[0].symbol;
-            weatherModel.CurrencyName = ctryData.currencies[0].name;
+            cityModel.CountryName = ctryData.name;
+            cityModel.countryFlagUrl = ctryData.flag;
+            cityModel.CurrencyCode = ctryData.currencies[0].code;
+            cityModel.CurrencySymbol = ctryData.currencies[0].symbol;
+            cityModel.CurrencyName = ctryData.currencies[0].name;
 
             // ------------------------------------------------------
             //
@@ -234,7 +234,7 @@ namespace GlobalTemp.Controllers
             {
                 _currencyApiEndpt = _currencyApiEndpt.Remove(paramIdx+4);
             }
-            _currencyApiEndpt += weatherModel.CurrencyCode;
+            _currencyApiEndpt += cityModel.CurrencyCode;
 
             try
             {
@@ -245,8 +245,8 @@ namespace GlobalTemp.Controllers
                 //
                 // Network issues like a broken internet connection will cause execution to reach here
                 //
-                weatherModel.ErrMsgToUser = _networkComFailedMsg;
-                return View(weatherModel);
+                cityModel.ErrMsgToUser = _networkComFailedMsg;
+                return View(cityModel);
             }
 
             if (resp.IsSuccessStatusCode == false)
@@ -254,8 +254,8 @@ namespace GlobalTemp.Controllers
                 //
                 // FIX_HERE: Provide better err msg here. City not found is not appropriate here
                 //
-                weatherModel.ErrMsgToUser = _cityNotFoundByWeatherApiMsg;
-                return View(weatherModel);
+                cityModel.ErrMsgToUser = _cityNotFoundByWeatherApiMsg;
+                return View(cityModel);
             }
 
             //
@@ -264,18 +264,18 @@ namespace GlobalTemp.Controllers
             //
             dataAsRawJSON = resp.Content.ReadAsStringAsync().Result;
             var currencyJsonDoc = JsonDocument.Parse(dataAsRawJSON);
-            float targetCurrencyVal = (float)currencyJsonDoc.RootElement.GetProperty("result").GetProperty(weatherModel.CurrencyCode).GetDouble();
+            float targetCurrencyVal = (float)currencyJsonDoc.RootElement.GetProperty("result").GetProperty(cityModel.CurrencyCode).GetDouble();
 
             //
             // Populate model with data bound for the view
-            // TargetCurrencyVal is with respect to US$
+            // TargetCurrencyVal is relative to US$
             //
-            weatherModel.TargetCurrencyVal = targetCurrencyVal;
+            cityModel.CurrencyVal = targetCurrencyVal;
 
             //
             //
             //
-            return View(weatherModel);
+            return View(cityModel);
         }
 
         public IActionResult Privacy()

@@ -1,4 +1,4 @@
-﻿@model GlobalTemp.Models.WeatherModel
+﻿@model GlobalTemp.Models.CityModel
 
 @{
     ViewData["title2"] = "";
@@ -8,8 +8,8 @@
     <div class="card text-white bg-primary mb-3" style="max-width: 40rem;">
 
         <div class="card-header text-center">
-            <h4 class="title1">Gobal Temperature Finder</h4>
-            <p class="title2">Get the current temperature of any city in the world v4</p>
+            <h4 class="title1">Gobal Village</h4>
+            <p class="title2">Get current data on any city in the world v5</p>
         </div>
 
         @{
@@ -36,9 +36,9 @@
 
                 string cityTempDpyF = String.Empty;
                 string cityTempDpyC = String.Empty;
-                if (float.IsNaN(Model.CityTempVal) == false)
+                if (float.IsNaN(Model.TemperatureVal) == false)
                 {
-                    double cityTempValF = @Model.CityTempVal;
+                    double cityTempValF = @Model.TemperatureVal;
                     // " °F"
                     cityTempDpyF = cityTempValF.ToString("0.#") + " °F";
                     double cityTempValC = 5.0 * (cityTempValF - 32.0) / 9.0;
@@ -51,19 +51,32 @@
                     // 4/13/2021 2:29:21 AM
                     sunriseDpy = Model.SunriseDT.ToString();
                     sunriseDpy = sunriseDpy.Substring(sunriseDpy.IndexOf('\u0020') + 1);
+                    int idxFinalColon = sunriseDpy.LastIndexOf(":");
+                    if (idxFinalColon > 0)
+                    {
+                        sunriseDpy = sunriseDpy.Remove(idxFinalColon, 3);
+                    }
                 }
+
                 string sunsetDpy = String.Empty;
                 if (Model.SunsetDT != null)
                 {
+                    // 4/13/2021 6:29:41 PM
                     sunsetDpy = Model.SunsetDT.ToString();
                     sunsetDpy = sunsetDpy.Substring(sunsetDpy.IndexOf('\u0020') + 1);
+                    int idxFinalColon = sunsetDpy.LastIndexOf(":");
+                    if (idxFinalColon > 0)
+                    {
+                        sunsetDpy = sunsetDpy.Remove(idxFinalColon, 3);
+                    }
                 }
+
                 string curDateDpy = String.Empty;
                 string curTimeDpy = String.Empty;
-                if (Model.nowDT != null)
+                if (Model.DateTimeNow != null)
                 {
-                    string tempStr = Model.nowDT.ToString("yyyy-MM-dd hh:mm tt");
-                    curDateDpy = tempStr.Substring(0, tempStr.IndexOf('\u0020'));
+                    string tempStr = Model.DateTimeNow.ToString("yyyy-MM-dd hh:mm tt");
+                    curDateDpy = tempStr.Substring(0, tempStr.IndexOf('\u0020')) + " " + Model.DateTimeNow.DayOfWeek.ToString().Substring(0,3);
                     curTimeDpy = tempStr.Substring(tempStr.IndexOf('\u0020') + 1);
                 }
 
@@ -81,9 +94,9 @@
                         currencySymbol = Model.CurrencySymbol;
                     }
 
-                    if (float.IsNaN(Model.TargetCurrencyVal) == false)
+                    if (float.IsNaN(Model.CurrencyVal) == false)
                     {
-                        currencyConv = "US $1 = " + currencySymbol + " " + Model.TargetCurrencyVal.ToString("0.00");
+                        currencyConv = "1 US$ = " + Model.CurrencyVal.ToString("0.00") + " " + currencySymbol;
                     }
 
                     if (String.IsNullOrEmpty(Model.CurrencyName) == false)
@@ -92,6 +105,7 @@
                         currencyName = currencyName.Substring(0, 1).ToUpper() + currencyName.Substring(1);
                     }
                 }
+
 
                 string errMsgToUser = Model.ErrMsgToUser;
                 bool errFlag = !string.IsNullOrEmpty(errMsgToUser);
@@ -118,29 +132,37 @@
                                         </tr>
 
                                         <tr>
-                                            <td class="title2">Now</td>
-                                            <td class="data"><h6>@curDateDpy</h6></td>
-                                            <td class="data"><h6>@curTimeDpy</h6></td>
+                                            <td class="title2">@cityDpy Time</td>
+                                            <td id="cityDate" class="data">@curDateDpy</td>
+                                            <td id="cityTime" class="data">@curTimeDpy</td>
+                                        </tr>
+
+                                        <tr>
+                                            <td class="title2">Your Time</td>
+                                            <td id="clientDate" class="data"></td>
+                                            <td id="clientTime" class="data"></td>
                                         </tr>
 
                                         <tr>
                                             <td class="title2">Temperature</td>
-                                            <td class="data"><h4>@cityTempDpyC</h4></td>
-                                            <td class="data"><h4>@cityTempDpyF</h4></td>
+                                            <td class="data">@cityTempDpyC</td>
+                                            <td class="data">@cityTempDpyF</td>
                                         </tr>
 
 
                                         <tr>
                                             <td class="title2">Sun Rise/Set</td>
-                                            <td class="data"><h6>@sunriseDpy</h6></td>
-                                            <td class="data"><h6>@sunsetDpy</h6></td>
+                                            <td class="data">@sunriseDpy</td>
+                                            <td class="data">@sunsetDpy</td>
                                         </tr>
 
                                         <tr>
                                             <td class="title2">Currency</td>
-                                            <td class="data"><h6>@currencySymbol (@currencyName)</h6></td>
-                                            <td class="data"><h6>@currencyConv</h6></td>
+                                            <td class="data">@currencySymbol : @currencyName</td>
+                                            <td class="data">@currencyConv</td>
                                         </tr>
+
+
                                     }
 
                                     @if (errFlag)
