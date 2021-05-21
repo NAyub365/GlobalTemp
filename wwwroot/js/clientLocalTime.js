@@ -3,8 +3,7 @@
     var now = new Date();
     var iDay = now.getDay();
     var dayName = dayNames[iDay];
-    dateText = now.toLocaleDateString('fr-CA');
-    dateText = dateText + " " + dayName;
+    var dateText = now.getFullYear().toString() + "-" + (now.getMonth() + 1).toString() + "-" + now.getDate() + " " + dayName;
     return dateText;
 }
 
