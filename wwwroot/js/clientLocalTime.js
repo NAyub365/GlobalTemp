@@ -1,19 +1,17 @@
-﻿function getDateNow() {
+﻿function getDateNowAsStr() {
     var dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
     var now = new Date();
-    var dateText = now.toISOString();
-    tempArray = dateText.split("T");
-    dateText = tempArray[0];
     var iDay = now.getDay();
     var dayName = dayNames[iDay];
+    dateText = now.toLocaleDateString('fr-CA');
     dateText = dateText + " " + dayName;
     return dateText;
 }
 
-function getTimeNow() {
+function getTimeNowAsStr() {
     var now = new Date();
-    var timeText = now.toLocaleTimeString();
-    return trimSecDigits(timeText);
+    var timeText = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true });
+    return timeText;
 }
 
 function checkIfElemExists(elemId) {
@@ -40,9 +38,9 @@ function trimSecDigits(dateTimeText) {
 }
 
 if (checkIfElemExists("clientDate")) {
-    document.getElementById("clientDate").innerHTML = getDateNow();
+    document.getElementById("clientDate").innerHTML = getDateNowAsStr();
 }
 
 if (checkIfElemExists("clientTime")) {
-    document.getElementById("clientTime").innerHTML = getTimeNow();
+    document.getElementById("clientTime").innerHTML = getTimeNowAsStr();
 }
