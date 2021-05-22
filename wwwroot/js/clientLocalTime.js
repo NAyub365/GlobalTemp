@@ -3,14 +3,34 @@
     var now = new Date();
     var iDay = now.getDay();
     var dayName = dayNames[iDay];
-    var dateText = now.getFullYear().toString() + "-" + (now.getMonth() + 1).toString() + "-" + now.getDate() + " " + dayName;
-    return dateText;
+    var iMonth = now.getMonth() + 1;
+    var monthStr = addLeadingZeros(iMonth, 2);;
+    var dateStr = addLeadingZeros(now.getDate(), 2);
+    var finalStr = now.getFullYear().toString() + "-" + monthStr + "-" + dateStr + " " + dayName;
+    return finalStr;
 }
 
 function getTimeNowAsStr() {
     var now = new Date();
-    var timeText = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true });
-    return timeText;
+
+    var hrVal = now.getHours();
+    var ampm = hrVal >= 12 ? "PM" : "AM";
+
+    hrVal = hrVal > 12 ? hrVal % 12 : hrVal;
+
+    var hrStr = addLeadingZeros(hrVal, 2);
+    var minStr = addLeadingZeros(now.getMinutes(), 2);
+
+    var timeStr = hrStr + ":" + minStr + " " + ampm;
+    return timeStr;
+}
+
+function addLeadingZeros(intVal, desiredDigitCnt) {
+    var intValAsStr = Number(intVal).toString();
+    while (intValAsStr.length < desiredDigitCnt) {
+        intValAsStr = "0" + intValAsStr;
+    }
+    return intValAsStr;
 }
 
 function checkIfElemExists(elemId) {
@@ -22,19 +42,7 @@ function checkIfElemExists(elemId) {
     }
     return bExists;
 }
-//
-// --------------------------------------------
-//  Input:
-//      "7:44:34 PM" or "2021-05-14 7:44:34 PM"
-//  Output:
-//      "7:44 PM" or "2021-05-14 7:44 PM"
-// --------------------------------------------
-//
-function trimSecDigits(dateTimeText) {
-    var idxLastColon = dateTimeText.lastIndexOf(":");
-    var timeTextWithoutSec = dateTimeText.substring(0, idxLastColon) + dateTimeText.substring(idxLastColon + 3);
-    return timeTextWithoutSec;
-}
+
 
 if (checkIfElemExists("clientDate")) {
     document.getElementById("clientDate").innerHTML = getDateNowAsStr();
