@@ -119,16 +119,16 @@
                                     {
                                         <tr>
                                             <td class="title2">City</td>
-                                            <td class="data align-middle" colspan="2">@cityDpy</td>
+                                            <td class="data align-middle" colspan="1">@cityDpy</td>
+                                            @if (string.IsNullOrEmpty(ctryFlagUrl) == false)
+                                            {
+                                                <td rowspan="2"><img src="@ctryFlagUrl" alt="Image here"/></td>
+                                            }
                                         </tr>
 
                                         <tr>
                                             <td class="title2">Country</td>
                                             <td class="data">@ctryDpy</td>
-                                            @if (string.IsNullOrEmpty(ctryFlagUrl) == false)
-                                            {
-                                                <td><img src="@ctryFlagUrl" alt="Image here" /></td>
-                                            }
                                         </tr>
 
                                         <tr>
