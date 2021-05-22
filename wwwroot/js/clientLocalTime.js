@@ -82,7 +82,7 @@ if (checkIfElemExists("CityTimeZoneOffset")) {
         msg = cityName + " is behind you by " + Math.abs(diffHrs) + " hrs";
     }
     else {
-        msg = "There's no difference b/w you and " + cityName;
+        msg = "Same Time Zone";
     }
     if (checkIfElemExists("timeDiff")) {
         document.getElementById("timeDiff").innerHTML = msg;
