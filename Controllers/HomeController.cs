@@ -150,6 +150,7 @@ namespace GlobalTemp.Controllers
             // timezoneOffsetInSec can be + or -
             // Convert.ToInt64
             long timezoneOffsetInSec = weatherData.timezone;
+            cityModel.CityTimeZoneOffset = timezoneOffsetInSec;
             //
             // Introducing redundant vars for the sake of readability
             // 1,619,782,768

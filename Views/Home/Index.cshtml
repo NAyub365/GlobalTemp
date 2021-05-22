@@ -9,12 +9,13 @@
 
         <div class="card-header text-center">
             <h4 class="title1">Gobal Guide</h4>
-            <p class="title2">Get current data on any city in the world v5.1</p>
+            <p class="title2">Get current data on any city in the world v6</p>
         </div>
 
         @{
             string cityDpy = String.Empty;
             string ctryDpy = String.Empty;
+            string cityTimeZoneOffsetStr = string.Empty;
             if (Model != null)
             {
 
@@ -76,7 +77,7 @@
                 if (Model.DateTimeNow != null)
                 {
                     string tempStr = Model.DateTimeNow.ToString("yyyy-MM-dd hh:mm tt");
-                    curDateDpy = tempStr.Substring(0, tempStr.IndexOf('\u0020')) + " " + Model.DateTimeNow.DayOfWeek.ToString().Substring(0,3);
+                    curDateDpy = tempStr.Substring(0, tempStr.IndexOf('\u0020')) + " " + Model.DateTimeNow.DayOfWeek.ToString().Substring(0, 3);
                     curTimeDpy = tempStr.Substring(tempStr.IndexOf('\u0020') + 1);
                 }
 
@@ -119,10 +120,10 @@
                                     {
                                         <tr>
                                             <td class="title2">City</td>
-                                            <td class="data align-middle" colspan="1">@cityDpy</td>
+                                            <td id="cityName" class="data align-middle" colspan="1">@cityDpy</td>
                                             @if (string.IsNullOrEmpty(ctryFlagUrl) == false)
                                             {
-                                                <td rowspan="2"><img src="@ctryFlagUrl" alt="Image here"/></td>
+                                                <td rowspan="2"><img src="@ctryFlagUrl" alt="Image here" /></td>
                                             }
                                         </tr>
 
@@ -141,6 +142,11 @@
                                             <td class="title2">Your Time</td>
                                             <td id="clientDate" class="data"></td>
                                             <td id="clientTime" class="data"></td>
+                                        </tr>
+
+                                        <tr>
+                                            <td class="title2">Time Diff</td>
+                                            <td id="timeDiff" class="data" colspan="2"></td>
                                         </tr>
 
                                         <tr>
@@ -179,10 +185,9 @@
 
                 </div>
 
-
-
-
-
+                <!-- Using this field to send the city's timezone offset to the client browser so the javascript there can compute the user's time difference from the slected city -->
+                cityTimeZoneOffsetStr = Model.CityTimeZoneOffset.ToString();
+                <input type="hidden" name="CityTimeZoneOffset" id="CityTimeZoneOffset" value="@cityTimeZoneOffsetStr" />
 
 
             }

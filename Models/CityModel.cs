@@ -20,6 +20,6 @@ namespace GlobalTemp.Models
 
         public string ErrMsgToUser { get; set; }
 
-        public string FeatureCtrlClientTime { get; set; }
+        public long CityTimeZoneOffset { get; set; }
     }
 }
